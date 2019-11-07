@@ -1,0 +1,48 @@
+ARG GOLANG_CONTAINER=golang:1.12-alpine
+
+FROM ${GOLANG_CONTAINER} as tools
+
+ENV GOCACHE=/go/cache
+ENV CGO_ENABLED=0
+
+RUN apk add --no-cache \
+	bash \
+	git
+
+RUN go get github.com/filmil/fmtlog/...  \
+	&& go install github.com/filmil/fmtlog/...
+
+# The docker file for beancount.
+FROM ubuntu:18.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y \
+	python-pdfminer \
+    gawk \
+    gnumeric \
+    libxml2-dev \
+    libxslt1-dev \
+    mercurial \
+    python3-bottle \
+    python3-bs4 \
+    python3-dateutil \
+    python3-lxml \
+    python3-pip \
+    python3-ply \
+    zlib1g-dev \
+    ""
+
+RUN cd /opt && \
+	hg clone https://bitbucket.org/blais/beancount && \
+	cd beancount && \
+	hg checkout -r 4462
+RUN cd /opt/beancount && python3 setup.py install
+RUN pip3 install nose
+
+RUN mkdir -p /opt/data
+RUN mkdir -p /opt/input
+COPY --from=tools /go/bin/* /bin/
+
+WORKDIR /opt/data
+

@@ -1,0 +1,34 @@
+# The docker file for serving bakedn-in beancount data over the web.
+# For the time being, this serves baked-in data which is not good for
+# stand-alone work.
+FROM ubuntu:18.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y \
+	curl \
+    gnumeric \
+    libxml2-dev \
+    libxslt1-dev \
+    mercurial \
+    python3-bottle \
+    python3-bs4 \
+    python3-dateutil \
+    python3-lxml \
+    python3-pip \
+    python3-ply \
+    zlib1g-dev \
+    ""
+
+RUN cd /opt && hg clone https://bitbucket.org/blais/beancount && cd beancount && hg checkout -r 4462
+RUN cd /opt/beancount && python3 setup.py install
+RUN pip3 install nose
+
+RUN mkdir -p /opt/data
+RUN mkdir -p /opt/input
+ADD *.beancount /opt/data/
+
+ENTRYPOINT PATH_INFO=/finance /usr/local/bin/bean-web --port=80 --public filmil.beancount
+EXPOSE 80
+WORKDIR /opt/data
+

@@ -1,0 +1,33 @@
+ARG GOLANG_CONTAINER=golang:1.12-alpine
+
+FROM ${GOLANG_CONTAINER} as tools
+
+ENV GOCACHE=/go/cache
+ENV CGO_ENABLED=0
+
+RUN apk add --no-cache \
+	bash \
+	git
+
+RUN go get github.com/filmil/fmtlog/...  \
+	&& go install github.com/filmil/fmtlog/...
+
+WORKDIR /go/src
+
+FROM ${GOLANG_CONTAINER}
+
+RUN apk add --no-cache \
+	bash \
+	git \
+    strace
+
+ENV GOCACHE=/go/cache
+ENV CGO_ENABLED=0
+
+COPY --from=tools /go/bin/* /bin/
+
+RUN mkdir -p /opt/src
+
+WORKDIR /opt/src
+
+
