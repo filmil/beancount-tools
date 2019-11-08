@@ -94,5 +94,5 @@ tag-build-tools: build-tools
 			${REGISTRY}/beancount-build-tools:${VERSION}
 
 .PHONY: push-build-tools
-push-build-tools: build-tools
+push-build-tools: tag-build-tools
 	docker push ${REGISTRY}/beancount-build-tools:${VERSION}
